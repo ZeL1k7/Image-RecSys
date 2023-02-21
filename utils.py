@@ -1,8 +1,8 @@
+import os
+from pathlib import Path
+from functools import lru_cache
 import torch
 from PIL import Image
-from pathlib import Path
-import os
-from functools import lru_cache
 
 
 class Embedder:
@@ -26,13 +26,17 @@ class ImageDataset(torch.utils.data.Dataset):
         image = self._transforms(image)
         return image, idx
 
+    def get_image_path(self, idx):
+        image_path = self._dataset[idx]
+        return image_path
+
     def __len__(self):
         return len(os.listdir(self.data_path))
 
 
 @lru_cache(1)
-def load_model(backbone: torch.nn.Module, device: torch.device) -> torch.nn.Module:
+def load_model(backbone: torch.nn.Module, device: torch.device) -> Embedder:
+    backbone = backbone.to(device)
+    backbone.eval()
     model = Embedder(backbone)
-    model = model.to(device)
-    model.eval()
     return model
