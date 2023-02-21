@@ -1,4 +1,4 @@
-from utils import Embedder, ImageDataset, load_model
+from utils import ImageDataset, load_model
 import torch
 import torchvision
 import gc
@@ -7,7 +7,6 @@ import os
 
 
 if __name__ == "__main__":
-    DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
     data_transforms = torchvision.transforms.Compose(
         [
             torchvision.transforms.Resize(224),
@@ -17,12 +16,12 @@ if __name__ == "__main__":
             ),
         ]
     )
-
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     resnet = torchvision.models.resnet101(pretrained=True)
-    model = load_model(resnet, DEVICE)
+    resnet.classifier.fc = torch.nn.Identity()
     dataset = ImageDataset("data/dataset/", data_transforms)
     loader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False)
-    embedder = Embedder(model)
+    embedder = load_model(resnet, device)
     embedding_idxs = {
         "embeddings_last.npy": 9000,
         "embeddings_2.npy": 6000,
@@ -38,7 +37,7 @@ if __name__ == "__main__":
             batch, idx = batch
             item_candidates = []
             idx_candidates = []
-            batch = batch.to(DEVICE)
+            batch = batch.to(device)
             user = embedder.get_embeddings(batch)
             bs = user.size(0)
             user = user.view(bs, -1)  # B x Embedding_dim
@@ -46,7 +45,7 @@ if __name__ == "__main__":
                 item_embeddings = np.load(
                     "/kaggle/input/yandex-embeddings/" + embedding_file
                 )
-                item_embeddings = torch.from_numpy(item_embeddings).to(DEVICE)
+                item_embeddings = torch.from_numpy(item_embeddings).to(device)
                 ranks = torch.nn.functional.cosine_similarity(
                     user, item_embeddings, dim=1
                 )  # C

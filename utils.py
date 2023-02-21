@@ -31,8 +31,8 @@ class ImageDataset(torch.utils.data.Dataset):
 
 
 @lru_cache(1)
-def load_model(model: torch.nn.Module, device: torch.device) -> torch.nn.Module:
-    model.fc = torch.nn.Identity()
-    model.to(device)
+def load_model(backbone: torch.nn.Module, device: torch.device) -> torch.nn.Module:
+    model = Embedder(backbone)
+    model = model.to(device)
     model.eval()
     return model

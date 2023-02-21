@@ -1,11 +1,10 @@
-from utils import Embedder, ImageDataset, load_model
+from utils import load_model, ImageDataset
 import torch
 import torchvision
 import gc
 import numpy as np
 
 if __name__ == "__main__":
-    DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
     data_transforms = torchvision.transforms.Compose(
         [
             torchvision.transforms.Resize(224),
@@ -15,18 +14,18 @@ if __name__ == "__main__":
             ),
         ]
     )
-
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     resnet = torchvision.models.resnet101(pretrained=True)
-    model = load_model(resnet, DEVICE)
+    resnet.classifier.fc = torch.nn.Identity()
     dataset = ImageDataset("data/dataset/", data_transforms)
     loader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False)
-    embedder = Embedder(model)
+    embedder = load_model(resnet, device)
     embeddings_list = []
     cnt, part = 0, 0
     with torch.no_grad():
         for batch in loader:
             img, idx = batch
-            img = batch.to(DEVICE)
+            img = batch.to(device)
             embeddings_list.append(
                 embedder.get_embeddings(img).view(-1).cpu().detach().numpy()
             )
