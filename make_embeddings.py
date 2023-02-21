@@ -11,6 +11,7 @@ if __name__ == "__main__":
     parser.add_argument("dataset_path", type=str, help="data files")
     parser.add_argument("embeddings_path", type=str, help="embedding files")
     args = parser.parse_args()
+    
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
     embeddings_list = []
     cnt, part = 0, 0

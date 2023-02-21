@@ -48,14 +48,14 @@ if __name__ == "__main__":
             batch = batch.to(DEVICE)
             user = embedder.get_embeddings(batch)
             bs = user.size(0)
-            user = user.view(bs, -1)  # B x Embedding_dim
+            user = user.view(bs, -1)
             for embedding_file in os.listdir(args.embeddings_path):
                 item_embeddings = np.load(args.embeddings_path + embedding_file)
                 item_embeddings = torch.from_numpy(item_embeddings).to(DEVICE)
 
                 ranks = torch.nn.functional.cosine_similarity(
                     user, item_embeddings, dim=1
-                )  # C
+                )
                 idxs = torch.argsort(ranks, dim=0, descending=True)
                 item_candidates.append(ranks[idxs[:TOP_K]].cpu().detach().numpy())
                 idxs += embedding_idxs[embedding_file]
@@ -66,18 +66,18 @@ if __name__ == "__main__":
             item_candidates = torch.tensor(np.array(item_candidates))
             idx_candidates = torch.tensor(
                 np.array(idx_candidates)
-            )  # Embedding_file x Candidates
-            item_dims = item_candidates.size()  # Embedding_file x Candidates
+            )
+            item_dims = item_candidates.size()
             item_candidates = item_candidates.view(-1)
             idx_candidates = idx_candidates.view(-1)
             cand_idx_ranked = torch.argsort(item_candidates, dim=0, descending=True)
             idx_candidates = idx_candidates[cand_idx_ranked]
             idx_candidates = idx_candidates.view(
                 item_dims
-            )  # Embedding_file x Candidates
+            )
             candidates.append(
                 [idx.cpu().numpy(), idx_candidates[0].cpu().numpy()]
-            )  # Pick TOP_K
+            )
 
             cnt += 1
             print(cnt)

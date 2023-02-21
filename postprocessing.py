@@ -11,6 +11,7 @@ if __name__ == "__main__":
     parser.add_argument("candidates_path", type=str, help="candidates files")
     parser.add_argument("output_path", type=str, help="data files")
     args = parser.parse_args()
+
     TOP_K = 6
     rec_idxs = np.load(
         args.candidates_path + os.listdir(args.candidates_path)[0], allow_pickle=True
