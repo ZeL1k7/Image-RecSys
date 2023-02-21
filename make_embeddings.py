@@ -1,3 +1,4 @@
+import argparse
 import gc
 from utils import load_model, ImageDataset
 import torch
@@ -6,6 +7,10 @@ import numpy as np
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Create embeddings")
+    parser.add_argument("dataset_path", type=str, help="data files")
+    parser.add_argument("embeddings_path", type=str, help="embedding files")
+    args = parser.parse_args()
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
     embeddings_list = []
     cnt, part = 0, 0
@@ -21,7 +26,7 @@ if __name__ == "__main__":
             ),
         ]
     )
-    dataset = ImageDataset("data/raw/", data_transforms)
+    dataset = ImageDataset(args.dataset_path, data_transforms)
     loader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False)
     embedder = load_model(resnet, DEVICE)
 
@@ -37,9 +42,10 @@ if __name__ == "__main__":
             if cnt % 50 == 0:
                 part += 1
                 np.save(
-                    "data/interim/embeddings_" + str(part) + ".npy", embeddings_list
+                    args.dataset_path + "embeddings_" + str(part) + ".npy",
+                    embeddings_list,
                 )
                 del embeddings_list
                 embeddings_list = []
             gc.collect()
-        np.save("data/interim/embeddings_last.npy", embeddings_list)
+        np.save(args.dataset_path + "embeddings_last.npy", embeddings_list)

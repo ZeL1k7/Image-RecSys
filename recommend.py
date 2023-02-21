@@ -1,3 +1,4 @@
+import argparse
 import os
 import gc
 import numpy as np
@@ -7,6 +8,11 @@ import torchvision
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Get candidates")
+    parser.add_argument("dataset_path", type=str, help="data raw files")
+    parser.add_argument("embeddings_path", type=str, help="embedding files")
+    parser.add_argument("output_path", type=str, help="output files")
+    args = parser.parse_args()
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
     embedding_idxs = {
         "embeddings_last.npy": 9000,
@@ -30,7 +36,7 @@ if __name__ == "__main__":
     )
     resnet = torchvision.models.resnet101(pretrained=True)
     resnet.fc = torch.nn.Identity()
-    dataset = ImageDataset("data/raw/", data_transforms)
+    dataset = ImageDataset(args.dataset_path, data_transforms)
     loader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False)
     embedder = load_model(resnet, DEVICE)
 
@@ -43,8 +49,8 @@ if __name__ == "__main__":
             user = embedder.get_embeddings(batch)
             bs = user.size(0)
             user = user.view(bs, -1)  # B x Embedding_dim
-            for embedding_file in os.listdir("data/interim/"):
-                item_embeddings = np.load("data/interim/" + embedding_file)
+            for embedding_file in os.listdir(args.embeddings_path):
+                item_embeddings = np.load(args.embeddings_path + embedding_file)
                 item_embeddings = torch.from_numpy(item_embeddings).to(DEVICE)
 
                 ranks = torch.nn.functional.cosine_similarity(
@@ -77,11 +83,11 @@ if __name__ == "__main__":
             print(cnt)
             if cnt % 1 == 0:
                 np.save(
-                    "data/processed/submission" + str(part) + ".npy",
+                    args.output_path + "candidates" + str(part) + ".npy",
                     np.array(candidates),
                 )
                 part += 1
                 del candidates
                 candidates = []
             gc.collect()
-        np.save("data/processed/submission_last.npy", np.array(candidates))
+        np.save(args.output_path + "candidates_last.npy", np.array(candidates))

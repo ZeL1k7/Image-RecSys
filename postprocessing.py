@@ -1,3 +1,4 @@
+import argparse
 import os
 import numpy as np
 import pandas as pd
@@ -5,13 +6,18 @@ from utils import ImageDataset
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="")
+    parser.add_argument("dataset_path", type=str, help="data files")
+    parser.add_argument("candidates_path", type=str, help="candidates files")
+    parser.add_argument("output_path", type=str, help="data files")
+    args = parser.parse_args()
     TOP_K = 6
     rec_idxs = np.load(
-        "data/processed/" + os.listdir("data/processed")[0], allow_pickle=True
+        args.candidates_path + os.listdir(args.candidates_path)[0], allow_pickle=True
     )
 
-    for path in os.listdir("data/processed")[1:]:
-        rec_idxs_curr = np.load("data/processed/" + path, allow_pickle=True)
+    for path in os.listdir(args.candidates_path)[1:]:
+        rec_idxs_curr = np.load(args.candidates_path + path, allow_pickle=True)
         rec_idxs = np.vstack((rec_idxs, rec_idxs_curr))
 
     dataset = ImageDataset("data/raw/", None)
@@ -28,4 +34,4 @@ if __name__ == "__main__":
 
     df = df.sort_values(by="filename")
     df = df.reset_index(drop=True)
-    df.to_csv("data/processed/submission.csv")
+    df.to_csv(args.candidates_path + "submission.csv")
