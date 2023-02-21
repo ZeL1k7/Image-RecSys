@@ -1,2 +1,3 @@
 # Image-RecSys
-``make`` to create submission.
+### To create submission:
+``make`` 
